@@ -1,5 +1,7 @@
 # Coded Blockchain Based Range Queries
 
+**Authors:** Brahmpreet Singh, Nicholas Allison, Dineth Mudugamuwa Hewage
+
 This project implements a coded blockchain system that allows for efficient range queries on historical data. By utilizing error correction codes, the system reduces the storage requirements for nodes while maintaining the security and integrity of the blockchain.
 
 ## Overview
