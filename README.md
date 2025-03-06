@@ -1,7 +1,5 @@
 # Coded Blockchain Based Range Queries
 
-**Authors:** Brahmpreet Singh, Nicholas Allison, Dineth Mudugamuwa Hewage
-
 This project implements a coded blockchain system that allows for efficient range queries on historical data. By utilizing error correction codes, the system reduces the storage requirements for nodes while maintaining the security and integrity of the blockchain.
 
 ## Overview
@@ -51,3 +49,10 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more details.
+
+## Authors
+
+- :raised_hands: :raised_hands: **Team Brute-Force!!!** :raised_hands: :raised_hands:
+- Brahmpreet Singh
+- Nicholas Allison
+- Dineth Mudugamuwa Hewage
