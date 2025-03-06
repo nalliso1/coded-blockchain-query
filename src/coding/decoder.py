@@ -15,7 +15,7 @@ class Decoder:
     def _perform_decoding(self, coded_fragments):
         # Placeholder for the actual decoding algorithm
         # This method should reconstruct the original data from coded fragments
-        return b''.join(coded_fragments)  # Example: simple concatenation
+        return ''.join(coded_fragments)  # Changed from b''.join to ''.join
 
     def verify_data(self, original_data, decoded_data):
         return original_data == decoded_data

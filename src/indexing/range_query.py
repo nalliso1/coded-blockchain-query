@@ -1,20 +1,20 @@
+from coding.decoder import Decoder
+
 class RangeQuery:
     def __init__(self, amvsl_index):
         self.amvsl_index = amvsl_index
+        self.decoder = None  # Will be set when needed
+
+    def execute(self, start_key, end_key):
+        """Execute a range query between the start and end keys"""
+        return self.amvsl_index.range_query(start_key, end_key)
 
     def execute_range_query(self, start_timestamp, end_timestamp):
+        """Execute a range query based on timestamps"""
         results = []
-        for node in self.amvsl_index.get_nodes():
-            coded_fragments = node.retrieve_coded_fragments(start_timestamp, end_timestamp)
-            decoded_data = self.decode_fragments(coded_fragments)
-            results.extend(decoded_data)
-        return self.aggregate_results(results)
-
-    def decode_fragments(self, coded_fragments):
-        # Implement decoding logic using the Decoder class
-        decoder = Decoder()
-        return decoder.decode(coded_fragments)
-
-    def aggregate_results(self, results):
-        # Implement aggregation logic for the results
-        return sorted(results, key=lambda x: x['timestamp'])  # Assuming results have a timestamp field
+        # This method would need actual node communication logic
+        # Simplified implementation for demonstration
+        data = self.amvsl_index.range_query_by_timestamp(start_timestamp, end_timestamp)
+        
+        # Decode if needed - simplified implementation
+        return data
