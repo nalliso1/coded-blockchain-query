@@ -1,38 +1,34 @@
-class DistributedStore:
-    def __init__(self):
-        # Map of node_id -> {block_id -> {fragment_id -> fragment_data}}
-        self.storage = {}
+# src/storage/distributed_store.py
+import requests
 
+class DistributedStore:
+    def __init__(self, node_manager):
+        self.node_manager = node_manager
+    
     def store(self, node_id, block_id, fragment_id, fragment):
-        """Store a fragment in the distributed storage"""
-        if node_id not in self.storage:
-            self.storage[node_id] = {}
+        """Store fragment on a specific node using HTTP request"""
+        node_url = self.node_manager.get_node_url(node_id)
+        if not node_url:
+            return False
         
-        if block_id not in self.storage[node_id]:
-            self.storage[node_id][block_id] = {}
-        
-        self.storage[node_id][block_id][fragment_id] = fragment
+        url = f"{node_url}/fragment/{block_id}/{fragment_id}"
+        try:
+            response = requests.put(url, json={"fragment": fragment})
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
     
     def retrieve(self, node_id, block_id, fragment_id):
-        """Retrieve a specific fragment from the distributed storage"""
-        try:
-            return self.storage[node_id][block_id][fragment_id]
-        except KeyError:
+        """Retrieve fragment from a specific node using HTTP request"""
+        node_url = self.node_manager.get_node_url(node_id)
+        if not node_url:
             return None
-    
-    def store_fragment(self, node_id, fragment):
-        """Legacy method for backward compatibility"""
-        if node_id not in self.storage:
-            self.storage[node_id] = {}
-        # For simple fragment storage without block/fragment IDs
-        if "fragments" not in self.storage[node_id]:
-            self.storage[node_id]["fragments"] = []
-        self.storage[node_id]["fragments"].append(fragment)
-    
-    def get_all_fragments_for_block(self, block_id):
-        """Get all fragments for a specific block across nodes"""
-        fragments = []
-        for node_storage in self.storage.values():
-            if block_id in node_storage:
-                fragments.extend(node_storage[block_id].values())
-        return fragments
+        
+        url = f"{node_url}/fragment/{block_id}/{fragment_id}"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response.json().get("fragment")
+            return None
+        except requests.RequestException:
+            return None

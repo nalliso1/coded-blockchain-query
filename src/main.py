@@ -24,8 +24,9 @@ def main():
     decoder = Decoder(num_fragments=3, threshold=1)
     amvsl = AMVSL()
     range_query = RangeQuery(amvsl_index=amvsl) 
-    distributed_store = DistributedStore()
-    node_manager = NodeManager()
+    node_manager = NodeManager(base_port=5000)
+    distributed_store = DistributedStore(node_manager)
+
 
     print("Coded Blockchain Range Query Application Initialized.")
     
