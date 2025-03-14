@@ -1,15 +1,30 @@
 class AMVSL:
     def __init__(self):
-        self.index = {}  # Key -> list of block_ids
+        self.index = {}  # Primary key index
+        self.secondary_indices = {}  # Column indices
         self.timestamp_index = {}  # timestamp -> list of (key, block_id) tuples
 
+    def create_secondary_index(self, column_name):
+        """Create index for a specific column"""
+        if column_name not in self.secondary_indices:
+            self.secondary_indices[column_name] = {}
+    
     def insert(self, key, value, block_id=None):
-        """Insert a key with block_id (ignoring value for storage efficiency)"""
+        # Primary index
         if key not in self.index:
             self.index[key] = []
-        
-        # Only store block_id, not the value
         self.index[key].append(block_id)
+        
+        # Update secondary indices
+        if isinstance(value, dict):
+            for column in self.secondary_indices:
+                if column in value:
+                    col_value = value[column]
+                    if col_value not in self.secondary_indices[column]:
+                        self.secondary_indices[column][col_value] = []
+                    self.secondary_indices[column][col_value].append({
+                        'key': key, 'block_id': block_id
+                    })
         
         # If block_id contains timestamp information, we could index by that as well
         if block_id is not None and hasattr(block_id, 'timestamp'):
@@ -56,3 +71,29 @@ class AMVSL:
             if start_time <= timestamp <= end_time:
                 result.extend(self.timestamp_index[timestamp])
         return result
+
+    def range_query_by_column(self, column, start_value, end_value):
+        """Query by column value range"""
+        if column not in self.secondary_indices:
+            return []
+            
+        results = []
+        # Handle numeric and string types
+        try:
+            start_val = float(start_value)
+            end_val = float(end_value)
+            
+            for value, entries in self.secondary_indices[column].items():
+                try:
+                    val = float(value)
+                    if start_val <= val <= end_val:
+                        results.extend(entries)
+                except ValueError:
+                    pass
+        except ValueError:
+            # String comparison
+            for value, entries in self.secondary_indices[column].items():
+                if start_value <= str(value) <= end_value:
+                    results.extend(entries)
+                    
+        return results
