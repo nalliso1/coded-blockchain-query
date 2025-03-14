@@ -21,6 +21,7 @@ class DistributedStore:
     def retrieve(self, node_id, block_id, fragment_id):
         """Retrieve fragment from a specific node using HTTP request"""
         node_url = self.node_manager.get_node_url(node_id)
+        print(node_url)
         if not node_url:
             return None
         

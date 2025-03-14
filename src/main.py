@@ -11,21 +11,20 @@ import time
 
 
 def generate_sample_data(count=10, counter=0):
-    """Generate sample key-value pairs for demonstration"""
+    """Generate sample key-value pairs for demonstration with zero-padded keys"""
     data = {}
     for i in range(count):
         x = counter+i
-        key = f"key_{x}"
+        key = f"{x:04d}"  # Zero-padded to 4 digits: 0102 instead of 102
         value = f"value_{random.randint(1000, 9999)}"
         data[key] = value
-
     return data
 
 def main():
     # Initialize components
     blockchain = Blockchain()
     encoder = Encoder(block_size=1024, redundancy=2)
-    decoder = Decoder(num_fragments=3, threshold=1)
+    decoder = Decoder(num_fragments=3, threshold=2)
     amvsl = AMVSL()
     range_query = RangeQuery(amvsl_index=amvsl) 
     node_manager = NodeManager(base_port=5000)
@@ -37,8 +36,8 @@ def main():
     # 1. Generate and add blocks to the blockchain
     print("\n=== Adding blocks to blockchain ===")
     blocks = []
-    counter = 300
-    for i in range(3):
+    counter = 2000
+    for i in range(20):
         data = generate_sample_data(5,counter)
         print(f"Creating block {i} with data: {data}")
         block = blockchain.create_block(data)
@@ -71,9 +70,8 @@ def main():
     
     # 4. Perform range queries
     print("\n=== Executing range queries ===")
-    # Query for keys between "key_2" and "key_8"
-    results = range_query.execute("key_102", "key_202")
-    print(f"Range query results: {results}")
+    results = range_query.execute("102", "500")
+    print(f"Range query metadata results: {results}")
     
     # 5. Demonstrate data retrieval and decoding
     print("\n=== Retrieving and decoding data for matching blocks ===")
@@ -86,38 +84,36 @@ def main():
     
     print(f"Found data in {len(unique_block_ids)} blocks: {unique_block_ids}")
     
-    # Retrieve and decode only the blocks that contain matching data
     for block_id in unique_block_ids:
         print(f"\nRetrieving data for block: {block_id}")
         
-        # Find the actual block object
-        target_block = None
-        for block in blockchain.get_blocks():
-            if block.index == block_id:
-                target_block = block
-                break
-                
-        if target_block:
-            # Retrieve fragments for this specific block
-            fragments = []
-            for i in range(decoder.threshold):
-                if i < len(node_ids):
-                    fragment = distributed_store.retrieve(node_ids[i], target_block.index, i)
-                    if fragment:
-                        fragments.append(fragment)
+        keys_in_block = [result['key'] for result in results if result.get('block_id') == block_id]
+        print(f"Keys to retrieve: {keys_in_block}")
+
+        # Proper retrieval from correct nodes based on fragment distribution
+        fragments = []
+        # Try to retrieve fragments until we have enough
+        for i in range(len(node_ids)):
+            if len(fragments) < decoder.threshold:  # Stop once we have enough
+                node_id = node_ids[i % len(node_ids)]
+                print(f"Attempting to retrieve fragment {i} from node {node_id}...")
+                fragment = distributed_store.retrieve(node_id, block_id, i)
+                if fragment:
+                    fragments.append(fragment)
+                    print(f"Successfully retrieved fragment {i} from {node_id}")
+
+        # After all retrieval attempts, check if we have enough to decode
+        if len(fragments) >= decoder.threshold:
+            recovered_data_str = decoder.decode(fragments)
             
-            if len(fragments) >= decoder.threshold:
-                # Decode the fragments to recover the original data
-                recovered_data = decoder.decode(fragments)
-                print(f"Original block data: {target_block.data}")
-                print(f"Recovered data: {recovered_data}")
-                
-                # Display only the key-value pairs that matched the range query
-                matching_data = {k: v for k, v in target_block.data.items() 
-                               if "key_102" <= k <= "key_202"}
-                print(f"Matching key-value pairs: {matching_data}")
-            else:
-                print(f"Not enough fragments retrieved: {len(fragments)}/{decoder.threshold} required")
+            import ast
+            recovered_data = ast.literal_eval(recovered_data_str)
+            
+            matching_data = {k: v for k, v in recovered_data.items() 
+                           if k in keys_in_block}
+            print(f"Retrieved key-value pairs from fragments: {matching_data}")
+        else:
+            print(f"Not enough fragments retrieved: {len(fragments)}/{decoder.threshold} required")
     
     print("\n=== Retrieved data successfully ===")
 

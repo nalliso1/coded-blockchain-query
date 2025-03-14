@@ -11,7 +11,6 @@ class Blockchain:
         self.chain.append(genesis_block)
 
     def create_block(self, data, previous_hash=None):
-        """Create a new block and add it to the chain"""
         if previous_hash is None and len(self.chain) > 0:
             previous_hash = self.chain[-1].hash
         
@@ -25,16 +24,13 @@ class Blockchain:
         return block
     
     def get_blocks(self):
-        """Return all blocks in the chain"""
         return self.chain
     
     @property
     def last_block(self):
-        """Return the last block in the chain"""
         return self.chain[-1] if self.chain else None
 
     def validate_chain(self):
-        """Validate the integrity of the blockchain"""
         for i in range(1, len(self.chain)):
             current = self.chain[i]
             previous = self.chain[i-1]

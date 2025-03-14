@@ -1,17 +1,24 @@
 class Encoder:
-    def __init__(self, block_size, redundancy):
+    def __init__(self, block_size=1024, redundancy=2):
         self.block_size = block_size
         self.redundancy = redundancy
-
+        self.num_fragments = redundancy + 1  # Total fragments = redundancy + 1
+    
     def encode(self, data):
-        # Implement error correction encoding logic here
-        coded_fragments = []
-        # Example: Split data into fragments and apply error correction
-        for i in range(0, len(data), self.block_size):
-            fragment = data[i:i + self.block_size]
-            coded_fragment = self._apply_error_correction(fragment)
-            coded_fragments.append(coded_fragment)
-        return coded_fragments
+        """
+        Encode data into multiple fragments with redundancy.
+        Simple implementation using replication with added markers.
+        """
+        fragments = []
+        
+        # Create the main fragment (original data)
+        fragments.append(f"FRAG0:{data}")
+        
+        # Create redundant fragments (with markers)
+        for i in range(1, self.num_fragments):
+            fragments.append(f"FRAG{i}:{data}")
+        
+        return fragments
 
     def _apply_error_correction(self, fragment):
         # Placeholder for actual error correction logic

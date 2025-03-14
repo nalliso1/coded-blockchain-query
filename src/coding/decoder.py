@@ -1,16 +1,25 @@
 class Decoder:
-    def __init__(self, num_fragments, threshold):
+    def __init__(self, num_fragments=3, threshold=2):
         self.num_fragments = num_fragments
         self.threshold = threshold
 
-    def decode(self, coded_fragments):
-        if len(coded_fragments) < self.threshold:
-            raise ValueError("Not enough fragments to decode the data.")
+    def decode(self, fragments):
+        """
+        Decode fragments to recover the original data.
+        Simple implementation that extracts data from fragment markers.
+        """
+        if len(fragments) < self.threshold:
+            raise ValueError(f"Not enough fragments: {len(fragments)}/{self.threshold} required")
 
-        # Implement the decoding logic here
-        # This is a placeholder for the actual decoding algorithm
-        original_data = self._perform_decoding(coded_fragments)
-        return original_data
+        # Extract original data from any fragment (strip the fragment marker)
+        for fragment in fragments:
+            if fragment.startswith("FRAG"):
+                # Find the position after the marker
+                marker_end = fragment.find(":")
+                if marker_end > 0:
+                    return fragment[marker_end+1:]
+
+        raise ValueError("Could not decode fragments - invalid format")
 
     def _perform_decoding(self, coded_fragments):
         # Placeholder for the actual decoding algorithm
