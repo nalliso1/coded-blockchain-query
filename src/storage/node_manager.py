@@ -1,4 +1,3 @@
-# src/storage/node_manager.py
 from .node_server import NodeServer
 
 class NodeManager:
@@ -41,7 +40,6 @@ class NodeManager:
     
     def get_available_nodes(self):
         """Get IDs of currently available nodes"""
-        # In a real system, you would ping nodes to check availability
         return list(self.nodes.keys())
     
     def get_node_url(self, node_id):

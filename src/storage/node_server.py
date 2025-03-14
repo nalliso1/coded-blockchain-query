@@ -1,4 +1,3 @@
-# src/storage/node_server.py
 from flask import Flask, request, jsonify
 import threading
 import requests
@@ -53,8 +52,6 @@ class NodeServer:
     
     def stop(self):
         """Stop the node server"""
-        # Flask doesn't provide a clean way to stop, so we'd need to implement
-        # a more sophisticated shutdown mechanism in a real-world scenario
         pass
     
     def add_peer(self, node_id, host, port):

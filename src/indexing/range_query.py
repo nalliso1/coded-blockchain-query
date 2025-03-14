@@ -12,9 +12,6 @@ class RangeQuery:
     def execute_range_query(self, start_timestamp, end_timestamp):
         """Execute a range query based on timestamps"""
         results = []
-        # This method would need actual node communication logic
-        # Simplified implementation for demonstration
         data = self.amvsl_index.range_query_by_timestamp(start_timestamp, end_timestamp)
         
-        # Decode if needed - simplified implementation
         return data

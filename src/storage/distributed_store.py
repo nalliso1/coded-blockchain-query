@@ -1,4 +1,3 @@
-# src/storage/distributed_store.py
 import requests
 
 class DistributedStore:

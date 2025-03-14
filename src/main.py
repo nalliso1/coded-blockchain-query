@@ -15,7 +15,7 @@ def generate_sample_data(count=10, counter=0):
     data = {}
     for i in range(count):
         x = counter+i
-        key = f"{x:04d}"  # Zero-padded to 4 digits: 0102 instead of 102
+        key = f"{x:04d}"
         value = f"value_{random.randint(1000, 9999)}"
         data[key] = value
     return data
@@ -33,7 +33,7 @@ def main():
 
     print("Coded Blockchain Range Query Application Initialized.")
     
-    # 1. Generate and add blocks to the blockchain
+    # Generate and add blocks to the blockchain
     print("\n=== Adding blocks to blockchain ===")
     blocks = []
     counter = 2000
@@ -44,7 +44,7 @@ def main():
         blocks.append(block)
         counter -= 100
     
-    # 2. Encode blocks and distribute fragments
+    # Encode blocks and distribute fragments
     print("\n=== Encoding and distributing blocks ===")
     node_ids = node_manager.get_available_nodes()
     if not node_ids:
@@ -62,18 +62,18 @@ def main():
             node_id = node_ids[i % len(node_ids)]
             distributed_store.store(node_id, block.index, i, fragment)
     
-    # 3. Build index from blockchain data
+    # Build index from blockchain data
     print("\n=== Building AMVSL index ===")
     for block in blockchain.get_blocks():
         for key, value in block.data.items():
             amvsl.insert(key, value, block.index)
     
-    # 4. Perform range queries
+    # Perform range queries
     print("\n=== Executing range queries ===")
     results = range_query.execute("102", "500")
     print(f"Range query metadata results: {results}")
     
-    # 5. Demonstrate data retrieval and decoding
+    # Demonstrate data retrieval and decoding
     print("\n=== Retrieving and decoding data for matching blocks ===")
     
     # Extract unique block IDs from range query results
