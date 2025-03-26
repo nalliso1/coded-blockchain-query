@@ -1,4 +1,4 @@
-from blockchain.chain import Blockchain
+from blockchain.blockchain import Blockchain
 from coding.encoder import Encoder
 from coding.decoder import Decoder
 from indexing.amvsl import AMVSL
