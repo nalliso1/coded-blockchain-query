@@ -1,33 +1,18 @@
 from blockchain.blockchain import Blockchain
 from coding.encoder import Encoder
 from coding.decoder import Decoder
-from indexing.amvsl import AMVSL
-from indexing.range_query import RangeQuery
+from indexing.block_locator import BlockLocator
 from storage.distributed_store import DistributedStore
 from storage.node_manager import NodeManager
 import random
-import time
 import pandas as pd
 import json
 
-
-def generate_sample_data(count=10, counter=0):
-    """Generate sample key-value pairs for demonstration with zero-padded keys"""
-    data = {}
-    for i in range(count):
-        x = counter+i
-        key = f"{x:04d}"
-        value = f"value_{random.randint(1000, 9999)}"
-        data[key] = value
-    return data
-
 def load_data_from_csv(file_path, key_column=None, records_per_block=10):
-    """Load data from CSV and organize it into blocks"""
     try:
         df = pd.read_csv(file_path)
         blocks_data = []
         
-        # Process in batches for blocks
         for i in range(0, len(df), records_per_block):
             block_data = {}
             batch = df.iloc[i:i+records_per_block]
@@ -36,9 +21,8 @@ def load_data_from_csv(file_path, key_column=None, records_per_block=10):
                 if key_column:
                     key = f"{row[key_column]}"
                 else:
-                    key = f"{idx:04d}"  # Use row number as key if none specified
-                
-                # Store all columns as a dictionary
+                    key = f"{idx:04d}"
+
                 block_data[key] = row.to_dict()
             
             blocks_data.append(block_data)
@@ -49,26 +33,23 @@ def load_data_from_csv(file_path, key_column=None, records_per_block=10):
         return []
 
 def main():
-    # Initialize components
     blockchain = Blockchain()
-    encoder = Encoder(block_size=1024, redundancy=2)
-    decoder = Decoder(num_fragments=3, threshold=2)
-    amvsl = AMVSL()
-    range_query = RangeQuery(amvsl_index=amvsl) 
+    encoder = Encoder(redundancy=2)  # 3 data + 2 parity = 5 total fragments
+    decoder = Decoder(num_fragments=5, threshold=3)  # Need at least 3 fragments
+    block_locator = BlockLocator() 
     node_manager = NodeManager(base_port=5000)
     distributed_store = DistributedStore(node_manager)
-
-    print("Coded Blockchain Range Query Application Initialized.")
     
-    # Load from CSV instead of generating data
     print("\n=== Loading data from CSV ===")
-    csv_path = "src/data/students.csv"  # Updated path
+    csv_path = "src/data/students.csv"
     blocks_data = load_data_from_csv(csv_path, key_column="id")
     
-    # Create blocks from CSV data batches
-    print("\n=== Adding blocks to blockchain ===")
+    print("\n=== Creating Blocks and Adding them to blockchain ===")
     for i, data in enumerate(blocks_data):
-        print(f"Creating block {i} with {len(data)} records")
+        if (i < 2):
+            print(f"Creating block {i} with {len(data)} records")
+        if ( i == 2):
+            print("...")
         block = blockchain.create_block(data)
     
     # Encode blocks and distribute fragments
@@ -80,29 +61,35 @@ def main():
     
     for block in blockchain.get_blocks():
         print(f"Encoding block: {block.index}")
-        # Use JSON instead of str() for data serialization
-        data_str = json.dumps(block.data)
-        fragments = encoder.encode(data_str)
+        # Serialize the entire block
+        block_serialized = json.dumps({
+            "index": block.index,
+            "timestamp": block.timestamp,
+            "data": block.data,
+            "previous_hash": block.previous_hash,
+            "hash": block.hash
+        })
+        fragments = encoder.encode(block_serialized)
         
         print(f"Distributing {len(fragments)} fragments across {len(node_ids)} nodes")
+        starting_node = block.index % len(node_ids)
         for i, fragment in enumerate(fragments):
-            node_id = node_ids[i % len(node_ids)]
+            node_id = node_ids[(starting_node + i) % len(node_ids)]
             distributed_store.store(node_id, block.index, i, fragment)
     
     # Create secondary indices for columns to query
-    amvsl.create_secondary_index("math.grade")
-    amvsl.create_secondary_index("english.grade")
+    block_locator.create_secondary_index("math.grade")
     
-    # Build index from blockchain data
+    # Building dictornary structure from blockchain data
     print("\n=== Building indices ===")
     for block in blockchain.get_blocks():
         for key, value in block.data.items():
-            amvsl.insert(key, value, block.index)
+            block_locator.insert(key, value, block.index)
     
     # Example: Range query by math grade (3.0 to 5.0 range)
     print("\n=== Executing grade range query ===")
-    grade_results = range_query.execute_by_column("math.grade", 9.0, 11.0)
-    print(f"Students with math grades B+ to A+: {len(grade_results)}")
+    grade_results = block_locator.range_query_by_column("math.grade", 9.0, 11.0)
+    print(f"Students with math grades 9.0 - 11.0: {len(grade_results)}")
     
     # Extract unique block IDs from results
     unique_block_ids = set()
@@ -121,29 +108,41 @@ def main():
                         if result.get('block_id') == block_id]
         print(f"Student IDs to retrieve: {keys_in_block}")
         
-        # Retrieve fragments from nodes
+        # Retrieve fragments from nodes using the same pattern as storage
         fragments = []
+        starting_node = block_id % len(node_ids)  # Match the distribution pattern
         for i in range(len(node_ids)):
             if len(fragments) < decoder.threshold:
-                node_id = node_ids[i % len(node_ids)]
-                print(f"Attempting to retrieve fragment {i} from node {node_id}...")
-                fragment = distributed_store.retrieve(node_id, block_id, i)
+                fragment_id = i
+                node_id = node_ids[(starting_node + i) % len(node_ids)]
+                print(f"Attempting to retrieve fragment {fragment_id} from node {node_id}...")
+                fragment = distributed_store.retrieve(node_id, block_id, fragment_id)
                 if fragment:
                     fragments.append(fragment)
-                    print(f"Successfully retrieved fragment {i} from {node_id}")
+                    print(f"Successfully retrieved fragment {fragment_id} from {node_id}")
         
         # Decode if we have enough fragments
         if len(fragments) >= decoder.threshold:
-            recovered_data_str = decoder.decode(fragments)
+            recovered_block_str = decoder.decode(fragments)
+            recovered_block_dict = json.loads(recovered_block_str)
             
-            # Use JSON instead of ast.literal_eval for decoding
-            recovered_data = json.loads(recovered_data_str)
+            # Reconstruct a Block object if needed
+            from blockchain.blockchain import Block
+            recovered_block = Block(
+                index=recovered_block_dict["index"],
+                timestamp=recovered_block_dict["timestamp"],
+                data=recovered_block_dict["data"],
+                previous_hash=recovered_block_dict["previous_hash"]
+            )
+            
+            # Verify hash matches
+            if recovered_block.hash == recovered_block_dict["hash"]:
+                print(f"Block {recovered_block.index} integrity verified")
             
             # Display information about students that match our query
-            print("\nMatching student records:")
             for key in keys_in_block:
-                if key in recovered_data:
-                    student = recovered_data[key]
+                if key in recovered_block.data:
+                    student = recovered_block.data[key]
                     print(f"ID: {key}, Name: {student.get('name')}, Math Grade: {student.get('math.grade')}")
         else:
             print(f"Not enough fragments retrieved: {len(fragments)}/{decoder.threshold} required")

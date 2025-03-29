@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 import threading
-import requests
 import time
 
 class NodeServer:
@@ -12,10 +11,8 @@ class NodeServer:
         self.storage = {}  # Local storage for fragments
         self.peers = {}  # Known peer nodes
         
-        # Define API endpoints
         self._setup_routes()
         
-        # Background thread for the server
         self.server_thread = None
     
     def _setup_routes(self):
@@ -40,7 +37,6 @@ class NodeServer:
             return jsonify({"status": "not_found"}), 404
     
     def start(self):
-        """Start the node server in a background thread"""
         def run_server():
             self.app.run(host=self.host, port=self.port)
         
@@ -51,13 +47,10 @@ class NodeServer:
         time.sleep(1)  # Give the server time to start
     
     def stop(self):
-        """Stop the node server"""
         pass
     
     def add_peer(self, node_id, host, port):
-        """Add a peer node to known peers"""
         self.peers[node_id] = {"host": host, "port": port}
     
     def get_url(self):
-        """Get the URL for this node"""
         return f"http://{self.host}:{self.port}"

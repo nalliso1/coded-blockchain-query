@@ -305,4 +305,4 @@ id,name,nationality,city,latitude,longitude,gender,ethnic.group,age,english.grad
 303,Madison Fithian,United States of America,Los Angeles,34.05,-118.24,F,NA,20,3.6,3.9,4,5,5,5,3
 304,Zachary Mulvahill,United States of America,Los Angeles,34.05,-118.24,M,NA,20,3.2,3.4,3.9,5,5,5,3
 305,Eliana Michelsen,United States of America,Oakland,37.8,-122.27,F,NA,23,3,2.8,2.9,5,4,4,5
-306,Dane Whittemore,Canada,Toronto,43.67,-79.42,M,NA,21,3.8,3.2,4,5,5,4,5
+306,Dane Whittemore,Canada,Toronto,43.67,-79.42,M,NA,21,3.8,10.11,4,5,5,4,5

@@ -5,11 +5,10 @@ class DistributedStore:
         self.node_manager = node_manager
     
     def store(self, node_id, block_id, fragment_id, fragment):
-        """Store fragment on a specific node using HTTP request"""
         node_url = self.node_manager.get_node_url(node_id)
         if not node_url:
             return False
-        
+
         url = f"{node_url}/fragment/{block_id}/{fragment_id}"
         try:
             response = requests.put(url, json={"fragment": fragment})
@@ -18,9 +17,7 @@ class DistributedStore:
             return False
     
     def retrieve(self, node_id, block_id, fragment_id):
-        """Retrieve fragment from a specific node using HTTP request"""
         node_url = self.node_manager.get_node_url(node_id)
-        print(node_url)
         if not node_url:
             return None
         
