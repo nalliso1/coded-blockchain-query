@@ -46,10 +46,7 @@ def main():
     
     print("\n=== Creating Blocks and Adding them to blockchain ===")
     for i, data in enumerate(blocks_data):
-        if (i < 2):
-            print(f"Creating block {i} with {len(data)} records")
-        if ( i == 2):
-            print("...")
+        print(f"Creating block {i} with {len(data)} records")
         block = blockchain.create_block(data)
     
     # Encode blocks and distribute fragments
@@ -77,21 +74,17 @@ def main():
             node_id = node_ids[(starting_node + i) % len(node_ids)]
             distributed_store.store(node_id, block.index, i, fragment)
     
-    # Create secondary indices for columns to query
     block_locator.create_secondary_index("math.grade")
     
-    # Building dictornary structure from blockchain data
     print("\n=== Building indices ===")
     for block in blockchain.get_blocks():
         for key, value in block.data.items():
             block_locator.insert(key, value, block.index)
     
-    # Example: Range query by math grade (3.0 to 5.0 range)
     print("\n=== Executing grade range query ===")
     grade_results = block_locator.range_query_by_column("math.grade", 9.0, 11.0)
     print(f"Students with math grades 9.0 - 11.0: {len(grade_results)}")
     
-    # Extract unique block IDs from results
     unique_block_ids = set()
     for result in grade_results:
         if 'block_id' in result:
@@ -99,34 +92,29 @@ def main():
     
     print(f"\n=== Found matching students in {len(unique_block_ids)} blocks ===")
     
-    # Retrieve each block and display matching students
     for block_id in unique_block_ids:
-        print(f"\nRetrieving data for block: {block_id}")
+        print(f"\nRetrieving fragments for block: {block_id}")
         
-        # Get keys in this block
         keys_in_block = [result['key'] for result in grade_results 
                         if result.get('block_id') == block_id]
         print(f"Student IDs to retrieve: {keys_in_block}")
         
-        # Retrieve fragments from nodes using the same pattern as storage
         fragments = []
-        starting_node = block_id % len(node_ids)  # Match the distribution pattern
+        starting_node = block_id % len(node_ids)
         for i in range(len(node_ids)):
             if len(fragments) < decoder.threshold:
                 fragment_id = i
                 node_id = node_ids[(starting_node + i) % len(node_ids)]
-                print(f"Attempting to retrieve fragment {fragment_id} from node {node_id}...")
+                print(f"Attempting to retrieve fragment {fragment_id} from {node_id}...")
                 fragment = distributed_store.retrieve(node_id, block_id, fragment_id)
                 if fragment:
                     fragments.append(fragment)
                     print(f"Successfully retrieved fragment {fragment_id} from {node_id}")
         
-        # Decode if we have enough fragments
         if len(fragments) >= decoder.threshold:
             recovered_block_str = decoder.decode(fragments)
             recovered_block_dict = json.loads(recovered_block_str)
             
-            # Reconstruct a Block object if needed
             from blockchain.blockchain import Block
             recovered_block = Block(
                 index=recovered_block_dict["index"],
@@ -135,11 +123,9 @@ def main():
                 previous_hash=recovered_block_dict["previous_hash"]
             )
             
-            # Verify hash matches
             if recovered_block.hash == recovered_block_dict["hash"]:
                 print(f"Block {recovered_block.index} integrity verified")
             
-            # Display information about students that match our query
             for key in keys_in_block:
                 if key in recovered_block.data:
                     student = recovered_block.data[key]
