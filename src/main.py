@@ -1,7 +1,7 @@
 from blockchain.blockchain import Blockchain
 from coding.encoder import Encoder
 from coding.decoder import Decoder
-from indexing.block_locator import BlockLocator
+from indexing.bplus_tree import BPlusTree
 from storage.distributed_store import DistributedStore
 from storage.node_manager import NodeManager
 import random
@@ -36,7 +36,7 @@ def main():
     blockchain = Blockchain()
     encoder = Encoder(redundancy=2)  # 3 data + 2 parity = 5 total fragments
     decoder = Decoder(num_fragments=5, threshold=3)  # Need at least 3 fragments
-    block_locator = BlockLocator() 
+    # Remove block_locator usage by not initializing it here.
     node_manager = NodeManager(base_port=5000)
     distributed_store = DistributedStore(node_manager)
     
@@ -74,15 +74,18 @@ def main():
             node_id = node_ids[(starting_node + i) % len(node_ids)]
             distributed_store.store(node_id, block.index, i, fragment)
     
-    block_locator.create_secondary_index("math.grade")
-    
-    print("\n=== Building indices ===")
+    # Build B+ tree index for the math.grade column directly
+    math_grade_index = BPlusTree(order=10)
+    print("\n=== Building B+ tree index for math.grade ===")
     for block in blockchain.get_blocks():
         for key, value in block.data.items():
-            block_locator.insert(key, value, block.index)
+            if isinstance(value, dict) and "math.grade" in value:
+                col_value = value["math.grade"]
+                entry = {'key': key, 'block_id': block.index}
+                math_grade_index.insert(str(col_value), entry)
     
-    print("\n=== Executing grade range query ===")
-    grade_results = block_locator.range_query_by_column("math.grade", 9.0, 11.0)
+    print("\n=== Executing grade range query using B+ Tree ===")
+    grade_results = math_grade_index.range_query("9.0", "11.0")
     print(f"Students with math grades 9.0 - 11.0: {len(grade_results)}")
     
     unique_block_ids = set()
@@ -95,6 +98,7 @@ def main():
     for block_id in unique_block_ids:
         print(f"\nRetrieving fragments for block: {block_id}")
         
+        # Gather the keys in block that match the range query.
         keys_in_block = [result['key'] for result in grade_results 
                         if result.get('block_id') == block_id]
         print(f"Student IDs to retrieve: {keys_in_block}")
