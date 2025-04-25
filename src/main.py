@@ -4,7 +4,6 @@ from coding.decoder import Decoder
 from indexing.bplus_tree import BPlusTree
 from storage.distributed_store import DistributedStore
 from storage.node_manager import NodeManager
-import random
 import pandas as pd
 import json
 
@@ -34,9 +33,9 @@ def load_data_from_csv(file_path, key_column=None, records_per_block=10):
 
 def main():
     blockchain = Blockchain()
-    encoder = Encoder(redundancy=2)  # 3 data + 2 parity = 5 total fragments
-    decoder = Decoder(num_fragments=5, threshold=3)  # Need at least 3 fragments
-    # Remove block_locator usage by not initializing it here.
+    encoder = Encoder(redundancy=2)  #3 data + 2 parity = 5 total fragments
+    decoder = Decoder(num_fragments=5, threshold=3)  #Need at least 3 fragments
+    #Remove block_locator usage by not initializing it here.
     node_manager = NodeManager(base_port=5000)
     distributed_store = DistributedStore(node_manager)
     
@@ -49,7 +48,6 @@ def main():
         print(f"Creating block {i} with {len(data)} records")
         block = blockchain.create_block(data)
     
-    # Encode blocks and distribute fragments
     print("\n=== Encoding and distributing blocks ===")
     node_ids = node_manager.get_available_nodes()
     if not node_ids:
@@ -74,7 +72,7 @@ def main():
             node_id = node_ids[(starting_node + i) % len(node_ids)]
             distributed_store.store(node_id, block.index, i, fragment)
     
-    # Build B+ tree index for the math.grade column directly
+    #Build B+ tree index for the math.grade column directly
     math_grade_index = BPlusTree(order=10)
     print("\n=== Building B+ tree index for math.grade ===")
     for block in blockchain.get_blocks():
@@ -98,7 +96,7 @@ def main():
     for block_id in unique_block_ids:
         print(f"\nRetrieving fragments for block: {block_id}")
         
-        # Gather the keys in block that match the range query.
+        #Gather the keys in block that match the range query.
         keys_in_block = [result['key'] for result in grade_results 
                         if result.get('block_id') == block_id]
         print(f"Student IDs to retrieve: {keys_in_block}")

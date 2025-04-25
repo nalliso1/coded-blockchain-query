@@ -6,10 +6,10 @@ class NodeServer:
     def __init__(self, node_id, host='127.0.0.1', port=5000):
         self.node_id = node_id
         self.host = host
-        self.port = port + int(node_id.split('_')[1])  # Different port for each node
+        self.port = port + int(node_id.split('_')[1])  
         self.app = Flask(f"node_{node_id}")
-        self.storage = {}  # Local storage for fragments
-        self.peers = {}  # Known peer nodes
+        self.storage = {}  
+        self.peers = {} 
         
         self._setup_routes()
         
@@ -44,7 +44,7 @@ class NodeServer:
         self.server_thread.daemon = True
         self.server_thread.start()
         print(f"Node server {self.node_id} started on {self.host}:{self.port}")
-        time.sleep(1)  # Give the server time to start
+        time.sleep(1)  
     
     def stop(self):
         pass

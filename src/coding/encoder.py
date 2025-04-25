@@ -3,7 +3,7 @@ import math
 
 class Encoder:
     def __init__(self, redundancy=2):
-        self.data_shares = 3  # Number of data fragments
+        self.data_shares = 3  #Number of data fragments
         self.redundancy = redundancy
         self.total_shares = self.data_shares + self.redundancy
         
