@@ -56,3 +56,13 @@ This project is licensed under the MIT License. See the LICENSE file for more de
 - Brahmpreet Singh
 - Nicholas Allison
 - Dineth Mudugamuwa Hewage
+
+## 📌 My Contributions
+
+This project was developed collaboratively by our team of three for the CS4545 course. We all participated in the design discussions, system testing, and performance evaluation. 
+
+I contributed to:
+- Implementing the node server and node manager components
+- Developed the system evaluation framework
+- Created the data loading & preprocessing utilities
+- Authoring the project report and documentation
