@@ -1,26 +1,31 @@
 # Coded Blockchain Based Range Queries
 
-This project implements a coded blockchain system that allows for efficient range queries on historical data. By utilizing error correction codes, the system reduces the storage requirements for nodes while maintaining the security and integrity of the blockchain.
+This project implements a coded blockchain system that enables efficient range queries on historical data while reducing per-node storage. By using error correction codes and distributed indexing, the system provides fault tolerance, scalability, and practical support for querying data ranges without storing the full chain.
 
-## Overview
+## 📚 Overview
 
-The coded blockchain architecture enables decentralized storage of coded fragments, allowing nodes to participate in the network without needing to store entire blocks. This approach not only minimizes storage costs but also enhances the scalability of blockchain applications.
+The system fragments blockchain data using Reed-Solomon encoding and distributes coded fragments across nodes. This reduces storage requirements at each node by 60% while still allowing complete block reconstruction from a subset of fragments. A B+ tree index enables efficient range queries on block attributes without needing to scan the entire blockchain.
 
-## Features
+## 📄 Research Paper
 
-- **Coded Storage**: Utilizes error correction codes to encode blocks, allowing nodes to store only fragments of data.
-- **Range Queries**: Implements historical range queries across multiple nodes, enabling efficient data retrieval.
-- **Authenticated Multi-Version Index**: Extends the AMVSL index for managing historical data in a secure manner.
+For a detailed explanation of the system design, implementation, and evaluation, read our full [CS4545 Final Report](./CS4545_Final_Report.pdf).
 
-## Project Structure
+## 🚀 Features
+
+- **Coded Storage**: Uses Reed-Solomon codes to encode and distribute fragments with built-in redundancy.
+- **Range Queries**: Supports efficient range lookups using a distributed B+ tree index.
+- **Fault Tolerance**: Blocks can be reconstructed from any 3 out of 5 fragments (40% redundancy).
+- **Distributed Architecture**: Nodes communicate via Flask-based REST APIs for fragment storage and retrieval.
+
+## 🧱 Project Structure
 
 ```
 coded-blockchain-query
 ├── src
-│   ├── blockchain          # Blockchain implementation
-│   ├── coding              # Encoding and decoding logic
-│   ├── indexing            # Indexing and querying functionality
-│   └── storage             # Distributed storage management
+│   ├── blockchain          # Blockchain core logic
+│   ├── coding              # Reed-Solomon encoder/decoder
+│   ├── indexing            # B+ tree for range queries
+│   └── storage             # Node servers and distribution logic
 ├── tests                   # Unit tests for the project
 ├── requirements.txt        # Project dependencies
 └── setup.py                # Setup script for the project
